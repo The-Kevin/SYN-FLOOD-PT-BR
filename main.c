@@ -48,11 +48,6 @@ int main(int argc, char* argv[]){
     fd = socket(AF_INET, SOCK_RAW,IPPROTO_RAW);
     if(fd == -1) error("Erro ao criar socket!");
 
-    //https://opensource.apple.com/source/xnu/xnu-344.34/bsd/netinet/in.h.auto.html
-    if(setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) == - 1){
-        error("Erro ao configurar opcoes no socket!");
-    } 
-
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(argv[1]);
 
@@ -67,7 +62,7 @@ int main(int argc, char* argv[]){
     ipHeader->ip_ttl = 0xff;
     ipHeader->ip_p = IPPROTO_TCP;
     ipHeader->ip_sum = 0;//will be calculate later
-    ipHeader->ip_src.s_addr = inet_addr("192.168.8.153"); //myself
+    ipHeader->ip_src.s_addr = INADDR_ANY; //myself
     ipHeader->ip_dst.s_addr = inet_addr(argv[1]);
 
     //https://opensource.apple.com/source/xnu/xnu-344.34/bsd/netinet/tcp.h.auto.html
