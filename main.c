@@ -1,50 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <unistd.h>
 #include <string.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 void error(char* msg) {
-  printf("Error: %s\n", msg);
-  exit(1);
+  perror(("Error: %s\n", msg));
+  exit(EXIT_FAILURE);
+}
+
+//ONLY APPLE
+void defineTCPHeader(struct tcphdr* tcp, uint16_t port, unsigned short checksum){
+    //https://opensource.apple.com/source/xnu/xnu-344.34/bsd/netinet/tcp.h.auto.html
+    //
+    //verify a best way to get source port from the kernel
+    unsigned short sourcePort = 50689;
+    tcp->th_ack = 0;
+    tcp->th_sport = sourcePort;
+    tcp->th_dport = port;
+    tcp->th_flags = TH_SYN; 
+    tcp->th_off = sizeof(struct tcphdr) / 4; // Tamanho do cabeçalho TCP em  32 bits
+    tcp->th_seq = 0;
+    tcp->th_sum = checksum;
+    tcp->th_urp = 0;
+    tcp->th_win = htons(65535); // this value was getted from wireshark sniff by empirically experience haha
 }
 
 int main(int argc, char* argv[]){
-  if(argc < 3) error("Too few arguments!");
 
-  int fd, s;
-  struct addrinfo hints, *res, *rp;
-  
-  memset(&hints, 0, sizeof hints);
+    int fd;
+    struct sockaddr_in addr;
+    struct tcphdr *tcpHeader;
+    fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if(fd == -1){
+        error("Erro! Impossivel criar socket de conexao!");
+    }
 
-  hints.ai_family = AF_INET; // ipv4 only
-  hints.ai_socktype = SOCK_STREAM; // tcp only yet
-  hints.ai_protocol = 0; // any protocol
-   
-  s = getaddrinfo(argv[1], argv[2], &hints, &res);
-  if(s != 0){
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
-    error("Erro: Nao foi possivel resolver o dominio!");
-  }
 
-  // try each item in list of getaddrinfo result 
-  for (rp = res; rp != NULL; rp = rp->ai_next) {
-     fd = socket(rp->ai_family, rp->ai_socktype,
-                  rp->ai_protocol);
-     if (fd == -1)
-         continue;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(argv[1]);
+    addr.sin_port = htons(atoi(argv[2]));                                     
+    defineTCPHeader(tcpHeader, atoi(argv[2]), 0);                                   
 
-     if (connect(fd, rp->ai_addr, rp->ai_addrlen) != -1)
-         break;                  /* Success */
+    int pack = sendto(fd, tcpHeader, sizeof(struct tcphdr), 0, (struct sockaddr*)&addr, sizeof(addr));
 
-   }
+   if(pack == -1){
+        error("Erro: Nao foi possivel enviar o SYN!");
+   } 
 
-  freeaddrinfo(res);
+   printf("Pacote SYN enviado com sucesso!");
+    
+    close(fd);
 
-  if(rp == NULL){
-    error("Could not connect!");
-  }
-
-  return 0;
+    
+    return 0;
 }
