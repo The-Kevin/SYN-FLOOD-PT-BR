@@ -12,6 +12,20 @@ O software foi construído utilizando a [API apple](https://opensource.apple.com
 
 Permissões de superusuário.
 
+## Como compilar o projeto
+
+1. Certifique-se de ter o Clang compiler instalado no seu sistema.
+
+2. No terminal, navegue até o diretório onde está localizado o arquivo `Makefile` e o arquivo `tcp_syn_sender.c`.
+
+3. Execute o comando `make` no terminal:
+
+    ```bash
+    make
+    ```
+
+    Isso compilará o projeto e criará um executável chamado `tcp_syn_sender`.
+
 ## Uso
 
 A execução é bastante simples, porém necessita de permissões de superusuário para sua execução, uma vez que pacotes TCP RAW não podem ser construídos sem a devida permissão do sistema operacional.
