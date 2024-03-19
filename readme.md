@@ -33,7 +33,7 @@ A execução é bastante simples, porém necessita de permissões de superusuár
 - O primeiro argumento será o IP (já resolvido) da máquina que irá receber os pacotes.
 - O segundo argumento será a porta destino da máquina que irá receber os pacotes.
 
-Um exemplo do comando completo para a execução seria `sudo ./main 127.0.0.1 80`.
+Um exemplo do comando completo para a execução seria `sudo ./tcp_syn_sender 127.0.0.1 80`.
 
 ## Futuro
 
